@@ -4,6 +4,8 @@
 
 We have already set up a boilerplate React app (create-react-app) with an express server backend.
 
+![screenshot](screenshot.png)
+
 To run it:
 
 - Run `npm install` to install the project dependencies.
