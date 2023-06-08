@@ -23,11 +23,11 @@ You will create a collaborative paint app (similar to https://pixelplace.io/). I
 - Users can have random names generated on the fly (User 1, User 2 for example), but the same user should have the same name across different clients.
 - New users arriving on the page should see previous drawings.
 
-## Additional completition criteria 
+## Additional completion criteria 
 
 - All canvas rendering should be done with the browser canvas API.
 - Implement a websocket server alongside the express server for handling real-time messages.
-- Modifying the REST routes in the express server is not required (but you can if you want).
+- Modifying the REST routes in the express server is not required.
 - It is *not* necessary to persist the canvas content after restarting the server. You can restart with a blank canvas.
 
 ## Sharing your code with us
