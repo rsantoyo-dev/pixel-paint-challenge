@@ -15,14 +15,22 @@
   position: relative;
 }
 
-.delete_me_message {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  bottom: 0;
-  right: 0;
+.connected_users_title {
+  margin-top: 0;
 }
 
-.connected_users {
+.connected_user {
   min-width: 200px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.user_color {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  background-color: var(--user-color);
+  border-radius: 50%;
+  margin-right: 0.5rem;
 }

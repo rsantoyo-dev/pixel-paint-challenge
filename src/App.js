@@ -1,22 +1,32 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { canvasSize } from './constants';
 import './App.css';
+
+function randomColor() {
+  return `#${[0, 0, 0]
+    .map(() => Math.floor(Math.random() * 256).toString(16))
+    .join('')}`;
+}
+
+let websocket;
+function getWebSocket() {
+  return (websocket =
+    websocket || new WebSocket(`ws://${window.location.hostname}:4040`));
+}
 
 function App() {
   /**
    * @type {React.RefObject<HTMLCanvasElement>}
    * */
   const canvasRef = useRef(null);
-  const websocketRef = useRef(
-    new WebSocket(`ws://${window.location.hostname}:4040`)
-  );
+  const websocketRef = useRef(getWebSocket());
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return; // should never happen
 
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvasSize.width, canvasSize.height);
+    ctx.fillText('TO BE IMPLEMENTED: canvas content (delete this text).', 10, 10);
 
     const ws = websocketRef.current;
 
@@ -48,12 +58,19 @@ function App() {
     };
   }, []);
 
+  const [color, setColor] = useState(() => randomColor());
+
   return (
     <div className="app">
       <header>
         <h1>Pixel paint</h1>
         <div className="color_selection">
-          TO BE IMPLEMENTED: Color selection goes here.
+          Your color:{' '}
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+          />
         </div>
       </header>
       <main className="main_content">
@@ -63,14 +80,22 @@ function App() {
             width={canvasSize.width}
             height={canvasSize.height}
           />
-          <div className="delete_me_message">
-            TO BE IMPLEMENTED: canvas content (delete this tag).
-          </div>
         </div>
-        <div className="connected_users">
-          TO BE IMPLEMENTED: Connected users go here.
+        <div>
+          <h3 className="connected_users_title">Connected users</h3>
+          <ConnectedUser color="red" name="Example user 1" />
+          <ConnectedUser color="blue" name="Example user 2" />
         </div>
       </main>
+    </div>
+  );
+}
+
+function ConnectedUser({ color, name }) {
+  return (
+    <div className="connected_user">
+      <div className="user_color" style={{ '--user-color': color }} />
+      <div>{name}</div>
     </div>
   );
 }
