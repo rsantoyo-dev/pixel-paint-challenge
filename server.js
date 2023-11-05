@@ -31,24 +31,42 @@ wsServer.on('connection', (ws) => {
 
     console.log('received message', message);
 
-    if (message.messageType === 'hey' && typeof message.data === 'string') {
+    if(message.messageType === 'draw' && typeof message.data === 'object') {
       for (const client of wsServer.clients) {
         client.send(
           JSON.stringify({
-            messageType: 'hey',
-            data: message.data,
+            messageType: 'draw',
+            data: {
+              x: message.data.x,
+              y: message.data.y,
+              color: message.data.color,
+              brush: message.data.brush,
+            },
           })
         );
       }
-    } else {
-      ws.send(
-        JSON.stringify({
-          messageType: 'error',
-          data: 'Client sent an unrecognized message format',
-          originalMessage: message,
-        })
-      );
     }
+    else{
+      if (message.messageType === 'hey' && typeof message.data === 'string') {
+        for (const client of wsServer.clients) {
+          client.send(
+            JSON.stringify({
+              messageType: 'hey',
+              data: message.data,
+            })
+          );
+        }
+      } else {
+        ws.send(
+          JSON.stringify({
+            messageType: 'error',
+            data: 'Client sent an unrecognized message format',
+            originalMessage: message,
+          })
+        );
+      }
+    }
+    
   });
 
   ws.on('close', () => {
