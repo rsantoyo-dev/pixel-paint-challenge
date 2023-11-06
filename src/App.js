@@ -25,7 +25,8 @@ function App() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [context, setContext] = useState(null);
   
-  const [socket, setSocket] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [color, setColor] = useState('#000000');
   
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -33,9 +34,7 @@ function App() {
 
     const ctx = canvas.getContext('2d');
     ctx.fillText('I love Nathaniel'+ctx.canvas.width, 10, 10);
-
     setContext(ctx);
-
     const ws = websocketRef.current;
     
 
@@ -55,8 +54,12 @@ function App() {
       switch (message.messageType) {
     
         case 'draw':
-          console.log('WebSocket says hello', message.data);
-          drawPixel(message.data);
+          drawPixel(message.data, ctx);
+          break;
+        case 'users':
+          console.log('userConnected id +>', message.data);
+          setColor(message.data.color)
+          setUsers(message.data)
           break;
         case 'hello':
           console.log('WebSocket says hello');
@@ -74,7 +77,13 @@ function App() {
 
   }, []);
 
-  const [color, setColor] = useState(() => randomColor());
+  
+  
+  
+  const clicked = (e) => {
+    console.log(e)
+    setIsDrawing(true)
+  }
   const onDrawEvent = (e) =>
   {
     if (!isDrawing) {
@@ -93,21 +102,18 @@ function App() {
         data: toSend,
       })
     );
-    //console.log(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
-    //drawPixel({ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY, color, brush: 'calligraphy' });
   }
-    //isDrawing && drawPixel({ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY, color, brush: 'calligraphy' });
-  
-  //{ x, y, color, brush }
-  const drawPixel = (data) => {
+
+  const drawPixel = (data, ctx) => {
     const brushData = brushes(data.brush);
-    context.save();
-    context.translate(data.x, data.y);
-    context.rotate(brushData.angle);
-    context.fillStyle = data.color;
-    context.fillRect(-brushData.width / 2, -brushData.height / 2, brushData.width, brushData.height);
-    context.restore();
+    ctx.save();
+    ctx.translate(data.x, data.y);
+    ctx.rotate(brushData.angle);
+    ctx.fillStyle = data.color;
+    ctx.fillRect(-brushData.width / 2, -brushData.height / 2, brushData.width, brushData.height);
+    ctx.restore();
   };
+
   
   return (
     <div className="app">
@@ -128,7 +134,7 @@ function App() {
             ref={canvasRef}
             width={canvasSize.width}
             height={canvasSize.height}
-            onMouseDown={()=>setIsDrawing(true)}
+            onMouseDown={(e)=>clicked(e)}
             onMouseMove={onDrawEvent}
             onMouseUp={()=>setIsDrawing(false)}
             onMouseOut={()=>setIsDrawing(false)}
@@ -136,8 +142,10 @@ function App() {
         </div>
         <div>
           <h3 className="connected_users_title">Connected users</h3>
-          <ConnectedUser color="red" name="Example user 1" />
-          <ConnectedUser color="blue" name="Example user 2" />
+          {users.map((user) => (
+            <ConnectedUser key={user.uid} color={user.color} name={'user_'+user.uid} />
+          ))}
+
         </div>
       </main>
     </div>

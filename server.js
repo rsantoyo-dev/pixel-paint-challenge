@@ -17,19 +17,38 @@ app.listen(process.env.PORT || 8080);
 
 const wsServer = new WebSocketServer({ port: 4040 });
 
+
+let users = [];
+let uidCounter = 0;
 wsServer.on('connection', (ws) => {
   console.log('WS client connected.');
+  
 
+  
+  const currentUid = uidCounter++;
+  const userColor = '#' + (Math.random() * 0xffffff).toString(16).slice(0, 6);
+  
+  users.push({uid: currentUid, color: userColor});
+  console.log(users)
+  
+  for (const client of wsServer.clients) {
+    client.send(
+      JSON.stringify({
+        messageType: 'users',
+        data: users,
+      })
+    );
+  }
+  
   ws.send(
     JSON.stringify({
       messageType: 'hello',
+      data: 'Hello client!',
     })
   );
 
   ws.on('message', (data) => {
     const message = JSON.parse(data.toString());
-
-    console.log('received message', message);
 
     if(message.messageType === 'draw' && typeof message.data === 'object') {
       for (const client of wsServer.clients) {
@@ -71,7 +90,19 @@ wsServer.on('connection', (ws) => {
 
   ws.on('close', () => {
     console.log('WS client disconnected.');
+    users = users.filter((user) => user.uid !== currentUid);
+    console.log(users);
+    for (const client of wsServer.clients) {
+      client.send(
+        JSON.stringify({
+          messageType: 'users',
+          data: users,
+        })
+      );
+    }
+    
   });
+  
 
   ws.onerror = console.error;
 });
