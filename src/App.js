@@ -3,11 +3,11 @@ import { canvasSize } from './constants';
 import './App.css';
 import brushes from './rendering/brushes';
 
-function randomColor() {
+/*function randomColor() {
   return `#${[0, 0, 0]
     .map(() => Math.floor(Math.random() * 256).toString(16))
     .join('')}`;
-}
+}*/
 
 let websocket;
 function getWebSocket() {
@@ -23,9 +23,9 @@ function App() {
   const websocketRef = useRef(getWebSocket());
   
   const [isDrawing, setIsDrawing] = useState(false);
-  const [context, setContext] = useState(null);
   
   const [users, setUsers] = useState([]);
+  const [user, setUser] = useState({ uid: -1, color: '#000000' });
   const [color, setColor] = useState('#000000');
   
   useEffect(() => {
@@ -33,39 +33,27 @@ function App() {
     if (!canvas) return; // should never happen
 
     const ctx = canvas.getContext('2d');
-    ctx.fillText('I love Nathaniel'+ctx.canvas.width, 10, 10);
-    setContext(ctx);
+    ctx.fillText('Hi all', 10, 10);
+
     const ws = websocketRef.current;
     
-
     ws.onopen = () => {
-      // send a message as soon as the websocket connection is established
-      ws.send(
-        JSON.stringify({
-          messageType: 'hey',
-          data: 'Hello peers!',
-        })
-      );
+      // User color has been created on server; nonetheless, user and random color object could have been handled here
     };
 
     ws.onmessage = (e) => {
       const message = JSON.parse(e.data);
 
       switch (message.messageType) {
-    
         case 'draw':
           drawPixel(message.data, ctx);
           break;
+        case 'userId':
+          setUser(message.user);
+          setColor(message.user.color)
+          break;
         case 'users':
-          console.log('userConnected id +>', message.data);
-          setColor(message.data.color)
-          setUsers(message.data)
-          break;
-        case 'hello':
-          console.log('WebSocket says hello');
-          break;
-        case 'hey':
-          console.log('Message from another client:', message.data);
+          setUsers(message.users)
           break;
         case 'error':
           console.error(message);
@@ -77,12 +65,14 @@ function App() {
 
   }, []);
 
-  
-  
-  
-  const clicked = (e) => {
-    console.log(e)
-    setIsDrawing(true)
+  const onPickColor = (e) => {
+    setColor(e.target.value)
+    websocketRef.current.send(
+      JSON.stringify({
+        messageType: 'userColorChange',
+        data: { uid: user.uid, color: e.target.value}
+      })
+    );
   }
   const onDrawEvent = (e) =>
   {
@@ -124,7 +114,7 @@ function App() {
           <input
             type="color"
             value={color}
-            onChange={(e) => setColor(e.target.value)}
+            onChange={(e) => onPickColor(e)}
           />
         </div>
       </header>
@@ -134,7 +124,7 @@ function App() {
             ref={canvasRef}
             width={canvasSize.width}
             height={canvasSize.height}
-            onMouseDown={(e)=>clicked(e)}
+            onMouseDown={()=>setIsDrawing(true)}
             onMouseMove={onDrawEvent}
             onMouseUp={()=>setIsDrawing(false)}
             onMouseOut={()=>setIsDrawing(false)}
@@ -142,9 +132,11 @@ function App() {
         </div>
         <div>
           <h3 className="connected_users_title">Connected users</h3>
-          {users.map((user) => (
-            <ConnectedUser key={user.uid} color={user.color} name={'user_'+user.uid} />
-          ))}
+          {
+            users.map((user) => (
+                <ConnectedUser key={user.uid} color={user.color} name={'user_'+user.uid} />
+            ))
+          }
 
         </div>
       </main>
